@@ -20,7 +20,7 @@ class ImageFolder(Dataset):
     """Dataset to iterate over a set of images inside a folder.
     
     The iteration process is over each individual image and the __getitem__ method returns a tuple
-    with the image's path and the image a pytorch float tensor.
+    with the image's path and the image as a pytorch float tensor.
     """
     def __init__(self, folder_path, img_size=416):
         self.files = sorted(glob.glob('%s/*.*' % folder_path))
@@ -54,6 +54,22 @@ class ImageFolder(Dataset):
 
 
 class ListDataset(Dataset):
+    """With a file indicating the images' path to load (one image per line), this Dataset is useful
+    to iterate over the images getting the path, the image and its labels as YOLO Style*.
+    
+    The images could not be squared or could not fit the img_size, so they need to be squared and transformed
+    to channels (3) x img_size x img_size. While doing this, the labels change too, so this class also
+    provides the mechanism to change the labels for the new image size.
+
+    * YOLO label style:
+    Each image has a file with the same name but with .txt extension that contains all the ground truth bounding boxes
+    and classes. Each line is as:
+    <object-class> <x> <y> <width> <height>
+    Where x, y, width, and height are relative to the image's width and height (i.e. between [0, 1]).
+
+    So, while iterating over the images this Dataset returns the image's path, the image squared and resized to
+    img_size x img_size and a tensor with the relative labels with shape (number of bounding boxes x 5).
+    """
     def __init__(self, list_path, img_size=416):
         with open(list_path, 'r') as file:
             self.img_files = file.readlines()
