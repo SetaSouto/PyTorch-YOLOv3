@@ -17,11 +17,18 @@ from skimage.transform import resize
 import sys
 
 class ImageFolder(Dataset):
+    """Dataset to iterate over a set of images inside a folder.
+    
+    The iteration process is over each individual image and the __getitem__ method returns a tuple
+    with the image's path and the image a pytorch float tensor.
+    """
     def __init__(self, folder_path, img_size=416):
         self.files = sorted(glob.glob('%s/*.*' % folder_path))
         self.img_shape = (img_size, img_size)
 
     def __getitem__(self, index):
+        """Load the image correspondent to the given index, pad it to make it a square, resize it to
+        match the expected img_size and return it as a torch float tensor."""
         img_path = self.files[index % len(self.files)]
         # Extract image
         img = np.array(Image.open(img_path))
