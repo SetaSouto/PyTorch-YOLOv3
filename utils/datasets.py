@@ -69,6 +69,9 @@ class ListDataset(Dataset):
 
     So, while iterating over the images this Dataset returns the image's path, the image squared and resized to
     img_size x img_size and a tensor with the relative labels with shape (number of bounding boxes x 5).
+
+    Returns:
+        image's path, (Channels, Height, Width), (Number of bounding boxes, 5)
     """
     def __init__(self, list_path, img_size=416):
         with open(list_path, 'r') as file:
