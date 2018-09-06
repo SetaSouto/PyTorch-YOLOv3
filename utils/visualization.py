@@ -4,6 +4,7 @@ import numpy as np
 import os
 from PIL import Image
 import torch
+from utils import load_classes
 
 
 def visualize_bounding_boxes(image, bounding_boxes, image_name=None, classes=None):
@@ -29,7 +30,7 @@ def visualize_bounding_boxes(image, bounding_boxes, image_name=None, classes=Non
     # The image must have a dimension of length 3 to show the image
     if (image.shape[0] != 3) and (image.shape[2] != 3):
         raise Exception('The image must have shape (3, H, W) or (H, W, 3)')
-    
+
     # Transpose image if it is necessary (numpy interprets the last dimension as the channels, pytorch not)
     image = image if image.shape[2] == 3 else image.transpose(1, 2, 0)
 
@@ -49,12 +50,20 @@ def visualize_bounding_boxes(image, bounding_boxes, image_name=None, classes=Non
         y = y * image_height
         h = h * image_height
         # Select the color for the class
-        color = colors[int(bounding_boxes[i, 0].item()) % n_colors]
+        class_index = int(bounding_boxes[i, 0].item())
+        color = colors[class_index % n_colors]
         # Generate and add rectangle to plot
-        ax.add_patch(patches.Rectangle((x, y), w, h, linewidth=2, edgecolor=color, facecolor='none'))  
+        ax.add_patch(patches.Rectangle((x, y), w, h, linewidth=2,
+                                       edgecolor=color, facecolor='none'))
+        # Generate text if there are any classes
+        if classes and len(classes) > class_index:
+            class_name = classes[class_index]
+            plt.text(x, y, s=class_name, color='white', verticalalignment='top',
+                     bbox={'color': color, 'pad': 0})
     # Show image and plot
     ax.imshow(image)
     plt.show()
+
 
 def generate_bounding_boxes_tensor(file_path):
     """Read each line of the file to get all the bounding boxes parameters.
@@ -76,8 +85,15 @@ def generate_bounding_boxes_tensor(file_path):
     else:
         raise Exception('There is no file at {}'.format(file_path))
 
-image_path = '/media/souto/DATA/HDD/datasets/coco/images/val2014/COCO_val2014_000000581655.jpg'
-image = np.array(Image.open(image_path))
-bounding_boxes_path = image_path.replace('images', 'labels').replace('jpg', 'txt')
-bounding_boxes = generate_bounding_boxes_tensor(bounding_boxes_path)
-visualize_bounding_boxes(image, bounding_boxes)
+
+# Run this file to test the visualizations
+if __name__ == '__main__':
+    image_path = '/media/souto/DATA/HDD/datasets/coco/images/val2014/COCO_val2014_000000581829.jpg'
+    image = np.array(Image.open(image_path))
+    bounding_boxes_path = image_path.replace(
+        'images', 'labels').replace('jpg', 'txt')
+    bounding_boxes = generate_bounding_boxes_tensor(bounding_boxes_path)
+    classes = load_classes(os.path.abspath('./data/coco.names'))
+
+    visualize_bounding_boxes(image, bounding_boxes,
+                             image_path.split('/')[-1], classes)
